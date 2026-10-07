@@ -1,0 +1,444 @@
+<h2 class="sr-only">An interactive register of a personal book collection: roughly 340 titles catalogued across three bookcase units, searchable and filterable, with a list of uncertain spines needing manual checking.</h2>
+<style>
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+#br .row{display:flex;gap:12px;padding:9px 2px;border-bottom:0.5px solid var(--border);align-items:baseline}
+#br .dot{flex:none;width:7px;height:7px;border-radius:50%;margin-top:7px}
+#br .chip{padding:6px 12px;border:0.5px solid var(--border-strong);border-radius:20px;background:transparent;color:var(--text-secondary);font-size:13px;cursor:pointer}
+#br .chip[aria-pressed=true]{background:var(--fill-accent);color:var(--on-accent);border-color:var(--fill-accent)}
+#br .sh{font-size:13px;color:var(--text-secondary);margin:26px 0 6px;padding-bottom:5px;border-bottom:0.5px solid var(--border-strong)}
+#br li{margin-bottom:10px;font-size:14px;line-height:1.6}
+</style>
+
+<div id="br" style="padding:1rem 0">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:12px;margin-bottom:1.25rem">
+    <div style="background:var(--surface-1);border-radius:var(--radius);padding:1rem"><div style="font-size:13px;color:var(--text-secondary)">Titles</div><div id="s1" style="font-size:24px;font-weight:500">—</div></div>
+    <div style="background:var(--surface-1);border-radius:var(--radius);padding:1rem"><div style="font-size:13px;color:var(--text-secondary)">Authors</div><div id="s2" style="font-size:24px;font-weight:500">—</div></div>
+    <div style="background:var(--surface-1);border-radius:var(--radius);padding:1rem"><div style="font-size:13px;color:var(--text-secondary)">To check</div><div id="s3" style="font-size:24px;font-weight:500">—</div></div>
+  </div>
+
+  <input type="search" id="q" placeholder="Search author or title" style="width:100%;margin-bottom:10px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
+    <button class="chip" data-f="all" aria-pressed="true">Everything</button>
+    <button class="chip" data-f="A" aria-pressed="false">Unit A</button>
+    <button class="chip" data-f="B" aria-pressed="false">Unit B</button>
+    <button class="chip" data-f="C" aria-pressed="false">Unit C</button>
+    <button class="chip" data-f="check" aria-pressed="false">Needs checking</button>
+    <button class="chip" data-f="az" aria-pressed="false">A–Z by author</button>
+    <button class="chip" data-f="fix" aria-pressed="false">Fix list</button>
+  </div>
+  <div style="display:flex;gap:16px;margin:10px 0 4px;font-size:12px;color:var(--text-muted)">
+    <span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--text-success);margin-right:5px"></span>Confirmed</span>
+    <span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--text-warning);margin-right:5px"></span>Probable</span>
+    <span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--text-danger);margin-right:5px"></span>Needs eyes</span>
+  </div>
+  <div id="out"></div>
+</div>
+
+<script>
+const RAW=`Doris Lessing|The Cleft|A|1|flat|H
+Colson Whitehead|Crook Manifesto|A|1|flat|H
+Dannie Abse|The Presence|A|1|1|H
+Peter Ackroyd|The Clerkenwell Tales|A|1|2|H
+Douglas Adams|The Hitch Hiker's Guide to the Galaxy|A|1|3|H
+Edward Albee|Who's Afraid of Virginia Woolf?|A|1|4|H
+Louisa May Alcott|Little Women|A|1|5|H
+Isabel Allende|The House of the Spirits|A|1|6|H
+Kingsley Amis|Lucky Jim|A|1|7|H
+Martin Amis|The Rachel Papers|A|1|8|H
+Diana Athill|Somewhere Towards the End|A|1|9|H
+Kate Atkinson|Festive Spirits|A|1|10|H
+Margaret Atwood|The Blind Assassin|A|1|11|H
+Margaret Atwood|Bluebeard's Egg|A|1|12|H
+Margaret Atwood|Cat's Eye|A|1|13|H
+Margaret Atwood|The Edible Woman|A|1|14|H
+Margaret Atwood|The Handmaid's Tale|A|1|15|H
+Margaret Atwood|The Heart Goes Last|A|1|16|H
+Margaret Atwood|Moral Disorder|A|1|17|H
+Margaret Atwood|Oryx and Crake|A|1|18|H
+Margaret Atwood|Surfacing|A|1|19|H
+Margaret Atwood|The Year of the Flood|A|1|20|H
+Margaret Atwood|unidentified|A|1|21|L
+W. H. Auden|Poems (sel. John Fuller)|A|1|22|H
+Jane Austen|Lady Susan|A|1|23|M
+Jane Austen|Persuasion|A|1|24|H
+Jane Austen|Pride and Prejudice|A|1|25|H
+Julian Barnes|Levels of Life|A|1|26|H
+Julian Barnes|The Sense of an Ending|A|1|27|M
+Brit Bennett|The Mothers|A|1|28|H
+Brit Bennett|The Vanishing Half|A|1|29|H
+Pat Barker|Regeneration|A|1|30|H
+Pat Barker|The Silence of the Girls|A|1|31|H
+Alan Bennett|Untold Stories|A|1|32|H
+Michael Curl|The Yorkshire Crossword Book Vol. 7|A|2|flat|H
+Andrew O'Hagan|Mayflies|A|2|flat|H
+Lena Dunham|Famesick|A|2|flat|H
+Louis de Bernières|Captain Corelli's Mandolin|A|2|1|H
+H. G. Bissinger|Friday Night Lights|A|2|2|H
+Amy Bloom|Away|A|2|3|H
+Simon Boas|A Beginner's Guide to Dying|A|2|4|H
+Katherine Boo|Behind the Beautiful Forevers|A|2|5|H
+W. E. Bowman|The Ascent of Rum Doodle|A|2|6|H
+Taffy Brodesser-Akner|Long Island Compromise|A|2|7|H
+Margaret Bonham|The Casino|A|2|8|L
+Emily Brontë|Wuthering Heights|A|2|9|H
+Charlotte Brontë|Jane Eyre|A|2|10|H
+Pearl S. Buck|The Good Earth|A|2|11|H
+Candace Bushnell|Sex and the City|A|2|12|H
+Lucy Caldwell|Intimacies|A|2|13|H
+Albert Camus|The Outsider|A|2|14|H
+Albert Camus|The Plague|A|2|15|H
+Truman Capote|Breakfast at Tiffany's|A|2|16|H
+Truman Capote|In Cold Blood|A|2|17|H
+Peter Carey|Theft: A Love Story|A|2|18|H
+Peter Carey|True History of the Kelly Gang|A|2|19|H
+Angela Carter|Wise Children|A|2|20|H
+Eleanor Catton|The Rehearsal|A|2|21|H
+Eleanor Catton|The Luminaries|A|2|22|M
+Jonathan Coe|The House of Sleep|A|2|23|H
+J. M. Coetzee|Disgrace|A|2|24|H
+J. M. Coetzee|Life and Times of Michael K|A|2|25|H
+Colette|Gigi and The Cat|A|2|26|H
+Linda Colley|The Ordeal of Elizabeth Marsh|A|2|27|H
+Arthur Conan Doyle|The Adventures of Sherlock Holmes|A|2|28|H
+Sara Collins|The Confessions of Frannie Langton|A|2|29|H
+Jilly Cooper|Rivals|A|2|30|H
+Douglas Coupland|Girlfriend in a Coma|A|2|31|H
+unidentified|unidentified|A|2|32|L
+Elizabeth Jane Howard|The Light Years|A|3|flat|H
+Molly Keane|Loving and Giving|A|3|flat|H
+Julian Barnes|The Pedant in the Kitchen|A|3|flat|H
+P. G. Wodehouse|Jeeves and the Yule-tide Spirit|A|3|flat|H
+Suad Aldarra|I Don't Want to Talk About Home|A|3|flat|H
+Roald Dahl|The Collected Short Stories|A|3|1|H
+Hunter Davies|The Fan|A|3|2|M
+Elizabeth Day|Magpie|A|3|3|H
+Daniel Defoe|Robinson Crusoe|A|3|4|H
+Rob Delaney|A Heart That Works|A|3|5|H
+Nicole Dennis-Benn|Patsy|A|3|6|H
+Kiran Desai|The Inheritance of Loss|A|3|7|H
+Patrick deWitt|The Sisters Brothers|A|3|8|H
+Charles Dickens|A Christmas Carol|A|3|9|H
+Naoise Dolan|Exciting Times|A|3|10|H
+Fyodor Dostoevsky|Crime and Punishment|A|3|11|H
+Roddy Doyle|The Commitments|A|3|12|H
+Daphne du Maurier|Frenchman's Creek|A|3|13|H
+Helen Dunmore|The Siege|A|3|14|H
+Joe Dunthorne|Submarine|A|3|15|H
+Gerald Durrell|My Family and Other Animals|A|3|16|H
+Bret Easton Ellis|American Psycho|A|3|17|H
+Dave Eggers|A Heartbreaking Work of Staggering Genius|A|3|18|H
+George Eliot|The Mill on the Floss|A|3|19|H
+unidentified|unidentified|A|3|20|L
+Nora Ephron|I Feel Bad About My Neck|A|3|21|H
+Diana Evans|Ordinary People|A|3|22|H
+Bernardine Evaristo|Blonde Roots|A|3|23|H
+Bernardine Evaristo|Girl, Woman, Other|A|3|24|H
+Hans Fallada|Alone in Berlin|A|3|25|H
+Sebastian Faulks|Birdsong|A|3|26|H
+Henry Fielding|Tom Jones|A|3|27|H
+Ranulph Fiennes|Captain Scott|A|3|28|H
+F. Scott Fitzgerald|The Great Gatsby|A|3|29|H
+F. Scott Fitzgerald|Tender Is the Night|A|3|30|H
+Georges Perec|Species of Spaces and Other Pieces|A|4|flat|H
+Louise Kennedy|Trespasses|A|4|flat|H
+Amor Towles|A Gentleman in Moscow|A|4|flat|H
+Mohsin Hamid|The Reluctant Fundamentalist|A|4|flat|H
+Hollie McNish|Lobster|A|4|flat|H
+Madeleine Gray|Chosen Family|A|4|flat|H
+Penelope Fitzgerald|Offshore|A|4|1|H
+Richard Flanagan|Gould's Book of Fish|A|4|2|H
+Jonathan Safran Foer|Everything Is Illuminated|A|4|3|H
+Karen Joy Fowler|We Are All Completely Beside Ourselves|A|4|4|H
+E. M. Forster|A Passage to India|A|4|5|H
+John Fowles|The Collector|A|4|6|H
+John Fowles|The Magus|A|4|7|H
+Jonathan Franzen|Freedom|A|4|8|H
+Michael Frayn|unidentified|A|4|9|L
+James Frey|A Million Little Pieces|A|4|10|H
+Anna Funder|Wifedom|A|4|11|H
+Neil Gaiman|American Gods|A|4|12|H
+Bonnie Garmus|Lessons in Chemistry|A|4|13|H
+Ross Gay|The Book of Delights|A|4|14|H
+Elizabeth Gilbert|City of Girls|A|4|15|H
+Holly Gramazio|The Husbands|A|4|16|H
+Linda Grant|Border Line|A|4|17|L
+unidentified|Unseen Unsung|A|4|18|L
+Graham Greene|The Human Factor|A|4|19|M
+Hafiz|The Green Sea of Heaven|A|4|20|M
+unidentified|unidentified|A|4|21|L
+unidentified|unidentified|A|4|22|L
+unidentified|unidentified|A|4|23|L
+Arthur Miller|The Crucible|B|1|flat|H
+Gabriel García Márquez|One Hundred Years of Solitude|B|1|1|H
+Yann Martel|Life of Pi|B|1|2|H
+Valerie Martin|Property|B|1|3|H
+Alexander Masters|Stuart: A Life Backwards|B|1|4|H
+Nikki May|Wahala|B|1|5|H
+Eimear McBride|A Girl Is a Half-formed Thing|B|1|6|H
+Patrick McCabe|unidentified|B|1|7|L
+Cormac McCarthy|Blood Meridian|B|1|8|H
+Cormac McCarthy|The Sunset Limited|B|1|9|H
+Cormac McCarthy|The Road|B|1|10|H
+Cormac McCarthy|unidentified|B|1|11|L
+Ian McEwan|On Chesil Beach|B|1|12|H
+Ian McEwan|unidentified|B|1|13|L
+Hollie McNish|Nobody Told Me|B|1|14|H
+Hollie McNish|Slug|B|1|15|H
+Coco Mellors|Blue Sisters|B|1|16|H
+unidentified|unidentified|B|2|1|L
+David Mitchell|Black Swan Green|B|2|2|H
+David Mitchell|Cloud Atlas|B|2|3|H
+David Mitchell|The Thousand Autumns of Jacob de Zoet|B|2|4|H
+Nancy Mitford|unidentified|B|2|5|L
+Molière|Tartuffe|B|2|6|H
+Toni Morrison|Love|B|2|7|H
+Toni Morrison|The Bluest Eye|B|2|8|H
+Chris Mullin|A Very British Coup|B|2|9|H
+Haruki Murakami|Dance Dance Dance|B|2|10|H
+Haruki Murakami|Kafka on the Shore|B|2|11|H
+Sayaka Murata|Convenience Store Woman|B|2|12|H
+Iris Murdoch|The Sea, The Sea|B|2|13|H
+Paul Murray|The Bee Sting|B|2|14|H
+Benjamin Myers|The Offing|B|3|1|H
+Vladimir Nabokov|Lolita|B|3|2|H
+Cho Nam-Joo|Kim Jiyoung, Born 1982|B|3|3|H
+Chimamanda Ngozi Adichie|Purple Hibiscus|B|3|4|H
+David Nicholls|One Day|B|3|5|H
+Audrey Niffenegger|The Time Traveler's Wife|B|3|6|H
+Barack Obama|The Audacity of Hope|B|3|7|H
+Michelle Obama|Becoming|B|3|8|H
+Edna O'Brien|The Country Girls|B|3|9|H
+Maggie O'Farrell|After You'd Gone|B|3|10|H
+Maggie O'Farrell|unidentified|B|3|11|L
+Maggie O'Farrell|I Am, I Am, I Am|B|3|12|H
+Ben Okri|The Famished Road|B|3|13|H
+Michael Ondaatje|The English Patient|B|3|14|H
+unidentified|Anna (?)|B|3|15|L
+Richard Powers|The Overstory|B|4|flat|H
+Philip Roth|American Pastoral|B|4|flat|H
+Richard Osman|The Thursday Murder Club|B|4|1|H
+Orhan Pamuk|My Name Is Red|B|4|2|H
+Ann Patchett|unidentified|B|4|3|L
+Alan Paton|Cry, the Beloved Country|B|4|4|H
+Michael Pedersen|Boy Friends|B|4|5|H
+DBC Pierre|Vernon God Little|B|4|6|H
+Emilie Pine|Notes to Self|B|4|7|H
+Sylvia Plath|The Bell Jar|B|4|8|H
+Pratchett and Gaiman|Good Omens|B|4|9|H
+J. B. Priestley|Delight|B|4|10|H
+unidentified|unidentified|B|4|11|L
+unidentified|unidentified|B|4|12|L
+unidentified|unidentified|B|4|13|L
+unidentified|unidentified|B|4|14|L
+Muriel Spark|The Prime of Miss Jean Brodie|C|1|flat|H
+Curtis Sittenfeld|Prep|C|1|1|H
+Curtis Sittenfeld|Sisterland|C|1|2|H
+Curtis Sittenfeld|unidentified|C|1|3|L
+Nigel Slater|Toast|C|1|4|H
+Robin Sloan|Sourdough|C|1|5|H
+Mark Slouka|unidentified|C|1|6|L
+Ali Smith|The Accidental|C|1|7|H
+Ali Smith|Hotel World|C|1|8|H
+Dodie Smith|I Capture the Castle|C|1|9|H
+Zadie Smith|On Beauty|C|1|10|H
+Patti Smith|Just Kids|C|1|11|H
+Art Spiegelman|The Complete Maus|C|1|12|H
+Aleksandr Solzhenitsyn|One Day in the Life of Ivan Denisovich|C|1|13|H
+John Steinbeck|Of Mice and Men|C|1|14|H
+John Steinbeck|East of Eden|C|1|15|H
+Neal Stephenson|Cryptonomicon|C|1|16|H
+Neal Stephenson|Quicksilver|C|1|17|H
+Laurence Sterne|Tristram Shandy|C|1|18|H
+Elizabeth Strout|Olive Kitteridge|C|1|19|H
+Graham Swift|Waterland|C|1|20|H
+W. M. Thackeray|unidentified|C|1|21|L
+Lisa Taddeo|Three Women|C|1|22|H
+Władysław Szpilman|The Pianist|C|1|23|H
+Colm Tóibín|The Blackwater Lightship|C|1|24|H
+Colm Tóibín|Long Island|C|1|25|H
+Colm Tóibín|The Master|C|1|26|H
+Leo Tolstoy|Anna Karenina|C|1|27|H
+Curtis Sittenfeld|Romantic Comedy|C|2|flat|H
+Barbara Trapido|Brother of the More Famous Jack|C|2|1|H
+Anthony Trollope|The Warden|C|2|2|H
+Mark Twain|The Adventures of Huckleberry Finn|C|2|3|M
+Kurt Vonnegut|Cat's Cradle|C|2|4|H
+Kurt Vonnegut|God Bless You, Mr. Rosewater|C|2|5|H
+Kurt Vonnegut|Breakfast of Champions|C|2|6|H
+Kurt Vonnegut|Slaughterhouse-Five|C|2|7|M
+David Foster Wallace|Infinite Jest|C|2|8|H
+Phoebe Waller-Bridge|Fleabag: The Scriptures|C|2|9|H
+Alice Walker|The Color Purple|C|2|10|H
+Alice Walker|The Complete Stories|C|2|11|H
+Sarah Waters|The Night Watch|C|2|12|H
+Sarah Waters|unidentified|C|2|13|L
+Christie Watson|The Language of Kindness|C|2|14|H
+Alison Weir|Innocent Traitor|C|2|15|H
+Colson Whitehead|The Underground Railroad|C|2|16|H
+Alice Winn|In Memoriam|C|2|17|H
+Jeanette Winterson|Why Be Happy When You Could Be Normal?|C|2|18|H
+Jeanette Winterson|Written on the Body|C|2|19|H
+Jeanette Winterson|Sexing the Cherry|C|2|20|H
+Meg Wolitzer|The Interestings|C|2|21|H
+Naomi Wood|The Hiding Game|C|2|22|H
+Virginia Woolf|Orlando|C|2|23|H
+Virginia Woolf|Mrs Dalloway|C|2|24|H
+Richard Yates|Revolutionary Road|C|2|25|H
+Stefan Zweig|unidentified|C|2|26|L
+David Stuart Davies (ed.)|Yorkshire: A Literary Landscape|C|3|flat|H
+Zed Nelson|A Portrait of Hackney|C|3|flat|H
+Johanna Neurath|Columbia Road|C|3|flat|H
+James Surowiecki|The Wisdom of Crowds|C|3|flat|H
+Russ Harris|The Happiness Trap|C|3|flat|H
+Peter Mayle|Up the Agency|C|3|flat|H
+Craig Taylor|Londoners|C|3|flat|H
+Clark and Wilkinson|The Shoreditch Tales|C|3|flat|H
+Ed Glinert|The London Compendium|C|3|flat|H
+unidentified|The Persephone Book of Short Stories|C|3|1|L
+The School of Life|Small Pleasures|C|3|2|H
+William Sieghart|The Poetry Pharmacy|C|3|3|H
+Stig Abell|What to Read Next|C|3|4|H
+Mark Forsyth|The Etymologicon|C|3|5|H
+Robin Ince|Bibliomaniac|C|3|6|H
+Lucy Mangan|Bookworm|C|3|7|H
+Peter Mendelsund|What We See When We Read|C|3|8|H
+Tom Mole|The Secret Life of Books|C|3|9|H
+Marina Warner|Once Upon a Time|C|3|10|H
+John Yorke|Into the Woods|C|3|11|H
+Alex Ross|The Rest Is Noise|C|3|12|H
+James Acaster|Perfect Sound Whatever|C|3|13|H
+David Hepworth|Uncommon People|C|3|14|H
+Miranda Sawyer|Out of Time|C|3|15|L
+John Berger|Ways of Seeing|C|3|16|H
+Robert Bringhurst|The Elements of Typographic Style|C|3|17|H
+Simon Garfield|Just My Type|C|3|18|H
+Donald Norman|Living with Complexity|C|3|19|M
+Paul Simpson|The Colour Code|C|3|20|H
+Kassia St Clair|The Secret Lives of Colour|C|3|21|H
+Deyan Sudjic|The Language of Things|C|3|22|H
+Bill Bryson|A Short History of Nearly Everything|C|3|23|H
+Adam Rutherford|Everything|C|3|24|L
+Philippa Perry|unidentified|C|3|25|L
+Oliver Burkeman|Meditations for Mortals|C|4|flat|H
+unidentified|On Friendship|C|4|flat|L
+Ella Risbridger|In Love with Love|C|4|flat|L
+Tom Hodgkinson|How to Live Like a Stoic|C|4|flat|H
+Rob Cowen|Common Ground|C|4|1|H
+Dave Goulson|A Sting in the Tale|C|4|2|H
+Richard Dawkins|Climbing Mount Improbable|C|4|3|H
+Richard Dawkins|The God Delusion|C|4|4|H
+Richard Dawkins|The Selfish Gene|C|4|5|H
+Ben Goldacre|Bad Science|C|4|6|H
+Peter Godfrey-Smith|Other Minds|C|4|7|H
+Stephen Jay Gould|Dinosaur in a Haystack|C|4|8|H
+Christopher Hitchens|God Is Not Great|C|4|9|H
+Helen Macdonald|H Is for Hawk|C|4|10|H
+Katherine Rundell|Why You Should Read Children's Books|C|4|11|L
+Merlin Sheldrake|Entangled Life|C|4|12|H
+Gavin Pretor-Pinney|The Cloudspotter's Guide|C|4|13|H
+Graeber and Wengrow|The Dawn of Everything|C|4|14|H
+Philippa Perry|The Book You Wish Your Parents Had Read|C|4|15|H
+unidentified|The Gentry in England and Wales, 1500-1700|C|4|16|L
+Tim Harford|The Undercover Economist|C|4|17|H
+Owen Jones|Chavs|C|4|18|H
+Banerjee and Duflo|Poor Economics|C|4|19|H
+John Lanchester|How to Speak Money|C|4|20|H
+Jonn Elledge|A History of the World in 47 Borders|C|5|flat|H
+Michael Pollan|unidentified|C|5|1|L
+Nigel Slater|unidentified|C|5|2|L
+unidentified|Is Butter a Carb?|C|5|3|L
+Sow and Friedman|Big Friendship|C|5|4|M
+Levine and Heller|Attached|C|5|5|M
+Daniel H. Pink|Drive|C|5|6|H
+Elizabeth Day|How to Fail|C|5|7|H
+Malcolm Gladwell|The Tipping Point|C|5|8|H
+Alan Weisman|The World Without Us|C|5|9|H
+James O'Brien|How to Be Right|C|5|10|H
+Jenny Odell|How to Do Nothing|C|5|11|H
+Patrick Kingsley|How to Be Danish|C|5|12|H
+Bono|Surrender|C|5|13|L`;
+
+const FIXES=`A|1|21|Last Atwood in the run, immediately before Auden's Poems. Title unreadable.
+A|1|23|First of three Austens, before Persuasion. Guessed Lady Susan.
+A|1|27|Julian Barnes between Levels of Life and the Bennetts. Guessed The Sense of an Ending.
+A|2|8|Pale spine between Long Island Compromise and Wuthering Heights.
+A|2|22|Tall blue spine with a face illustration, just after The Rehearsal. Guessed The Luminaries.
+A|2|32|Very last spine on the shelf, far right.
+A|3|2|Between Dahl's short stories and Magpie. Guessed Hunter Davies, The Fan.
+A|3|20|Pale spine between The Mill on the Floss and the Ephron.
+A|4|9|A Michael Frayn, between Freedom and A Million Little Pieces.
+A|4|17-23|Biggest gap in unit A. The whole right-hand end: something reading Border Line, then Unseen Unsung, a Graham Greene, The Green Sea of Heaven, then three or four spines lost to shadow.
+B|1|7|Patrick McCabe, between A Girl Is a Half-formed Thing and the McCarthys.
+B|1|11|Fourth Cormac McCarthy, after The Road.
+B|1|13|Second Ian McEwan, after On Chesil Beach.
+B|2|1|Pale blue spine at the far left, before Black Swan Green.
+B|2|5|Nancy Mitford, between Jacob de Zoet and Tartuffe.
+B|3|11|Middle Maggie O'Farrell of three, between After You'd Gone and I Am, I Am, I Am.
+B|3|15|Spine reading Anna at the right edge, after The English Patient.
+B|4|3|Ann Patchett, between My Name Is Red and Cry, the Beloved Country.
+B|4|11-14|Everything to the right of Delight. Too dark to read at all.
+C|1|3|Third Curtis Sittenfeld, before Toast.
+C|1|6|Mark Slouka, between Sourdough and the Ali Smiths.
+C|1|21|Thackeray, in the run between Waterland and Three Women.
+C|2|3|Mark Twain, approaching the Vonneguts. Guessed Huckleberry Finn.
+C|2|7|Fourth Vonnegut, immediately before Infinite Jest. Guessed Slaughterhouse-Five.
+C|2|13|Second Sarah Waters, after The Night Watch.
+C|2|26|Stefan Zweig, last book on the shelf.
+C|3|1|Grey slipcase at the far left. Guessed a Persephone short-story anthology.
+C|3|15|Miranda Sawyer, near Uncommon People.
+C|3|19|Guessed Donald Norman, Living with Complexity.
+C|3|24-25|The green and teal pair at the right end: something reading Everything, and a Philippa Perry.
+C|4|flat|The two stacked at the left: On Friendship and In Love with Love. Authors unconfirmed.
+C|4|11|Small pink Katherine Rundell, near H Is for Hawk.
+C|4|16|Academic-looking history of the English gentry, right of the Philippa Perry.
+C|5|all|Largest gap overall. Left third hidden by the chair; roughly fifteen spines unreadable. The Pollan and the Slater are visible but untitled. Worth reshooting on its own with the chair moved and a light held low.`;
+
+const UN={A:'Unit A',B:'Unit B',C:'Unit C'};
+const UNL={A:'Unit A, the first bookcase',B:'Unit B, centre and corner column',C:'Unit C, right-hand column'};
+const DOT={H:'var(--text-success)',M:'var(--text-warning)',L:'var(--text-danger)'};
+const books=RAW.split('\n').map(l=>{const p=l.split('|');return{a:p[0],t:p[1],u:p[2],s:+p[3],p:p[4],c:p[5]}});
+const fixes=FIXES.split('\n').map(l=>{const p=l.split('|');return{u:p[0],s:p[1],p:p[2],n:p[3]}});
+document.getElementById('s1').textContent=books.length;
+document.getElementById('s2').textContent=new Set(books.map(b=>b.a).filter(a=>a!=='unidentified')).size;
+document.getElementById('s3').textContent=books.filter(b=>b.c!=='H').length;
+const out=document.getElementById('out');
+let mode='all',q='';
+const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+function row(b){
+  const unk=b.t==='unidentified';
+  const ttl=unk?'<span style="color:var(--text-danger);font-size:14px">Title not legible</span>'
+    :'<span style="font-family:var(--font-voice);font-size:16px">'+esc(b.t)+'</span>';
+  const aut=b.a==='unidentified'?'Author not legible':esc(b.a);
+  return '<div class="row"><span class="dot" style="background:'+DOT[b.c]+'"></span>'
+    +'<div style="flex:1;min-width:0">'+ttl
+    +'<span style="display:block;font-size:13px;color:var(--text-secondary)">'+aut+'</span></div>'
+    +'<span style="flex:none;font-size:12px;color:var(--text-muted)">'+b.u+'&middot;'+b.s+'</span></div>';
+}
+function render(){
+  if(mode==='fix'){
+    let h='<p style="font-size:14px;color:var(--text-secondary);margin:1.25rem 0 0">Each entry says where the book sits relative to its neighbours. Work left to right along the shelf and the position numbers should line up.</p>';
+    ['A','B','C'].forEach(u=>{
+      h+='<div class="sh">'+UNL[u]+'</div><ul style="padding-left:1.1rem;margin:0">';
+      fixes.filter(f=>f.u===u).forEach(f=>{h+='<li><code style="font-family:var(--font-mono);font-size:12px;color:var(--text-accent)">Shelf '+f.s+', pos '+f.p+'</code> '+esc(f.n)+'</li>'});
+      h+='</ul>'});
+    out.innerHTML=h;return;
+  }
+  let l=books.slice();
+  if(mode==='A'||mode==='B'||mode==='C')l=l.filter(b=>b.u===mode);
+  if(mode==='check')l=l.filter(b=>b.c!=='H');
+  if(q)l=l.filter(b=>(b.a+' '+b.t).toLowerCase().includes(q));
+  if(!l.length){out.innerHTML='<p style="color:var(--text-muted);padding:2.5rem 0;text-align:center">Nothing on the shelves matches that.</p>';return}
+  if(mode==='az'||q){
+    l.sort((x,y)=>x.a.localeCompare(y.a)||x.t.localeCompare(y.t));
+    out.innerHTML='<div class="sh">'+l.length+' title'+(l.length>1?'s':'')+'</div>'+l.map(row).join('');return;
+  }
+  let h='',cur='';
+  l.forEach(b=>{const k=b.u+b.s;if(k!==cur){cur=k;h+='<div class="sh">'+UN[b.u]+', shelf '+b.s+'</div>'}h+=row(b)});
+  out.innerHTML=h;
+}
+document.querySelectorAll('#br .chip').forEach(c=>c.addEventListener('click',()=>{
+  document.querySelectorAll('#br .chip').forEach(x=>x.setAttribute('aria-pressed','false'));
+  c.setAttribute('aria-pressed','true');mode=c.dataset.f;render()}));
+document.getElementById('q').addEventListener('input',e=>{q=e.target.value.trim().toLowerCase();render()});
+render();
+</script>
